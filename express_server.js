@@ -18,6 +18,11 @@ app.get("/hello", (req, res) => {
   res.render("hello_world", templateVars);
 });
 
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL:req.get('host') + req.originalUrl};
+  res.render("urls_show", templateVars);
+});
+
 
 
 /*
