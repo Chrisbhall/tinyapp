@@ -16,8 +16,8 @@ const urlDatabase = {
 function generateRandomString() {
   let random = 0;
   let letter = 0;
-  let result = 0;
-  for (let i = 0; i < 5; i++) {
+  let result = String.fromCharCode(Math.round(Math.random() * (57 - 48)) + 48);
+  for (let i = 0; i < 6; i++) {
     random = Math.round(Math.random() * (6 - 1)) + 1;
     if (random % 2 === 0) {
       letter = String.fromCharCode(Math.round(Math.random() * (90 - 65)) + 65);
@@ -28,10 +28,10 @@ function generateRandomString() {
     }
     result += letter;
   //console.log(result);
-  return result;
+  
   }
+  return result;
 }
-generateRandomString();
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -39,12 +39,16 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let key = generateRandomString();
+  //console.log(req.body.longURL + key);  // Log the POST request body to the console
+  urlDatabase[key] = req.body; 
+  const templateVars = { shortURL: key, longURL:req.body.longURL};
+  res.render("urls_show", templateVars);
+  //res.send("/urls/:shortURL");
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/hello", (req, res) => {
-  generateRandomString();
   const templateVars = { greeting: 'Hello World!' };
   res.render("hello_world", templateVars);
 });
@@ -53,10 +57,16 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/u/:shortURL", (req, res) => {
+   const longURL = urlDatabase[req.params.shortURL]["longURL"];
+   res.redirect(longURL);
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
+
 
 
 
