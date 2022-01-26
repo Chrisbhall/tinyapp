@@ -1,7 +1,9 @@
+const cookieParser = require('cookie-parser');
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
+app.use(cookieParser());
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -13,7 +15,7 @@ const urlDatabase = {
 };
 
 // generate a random short string of 6 characters
-function generateRandomString() {
+const generateRandomString = function() {
   let random = 0;
   let letter = 0;
   let result = String.fromCharCode(Math.round(Math.random() * (57 - 48)) + 48);
@@ -27,81 +29,91 @@ function generateRandomString() {
       letter = String.fromCharCode(Math.round(Math.random() * (57 - 48)) + 48);
     }
     result += letter;
-  //console.log(result);
+    //console.log(result);
   
   }
   return result;
-}
+};
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const templateVars = {
+    username: req.cookies.username,
+    urls: urlDatabase
+    // ... any other vars
+  };
   // const templateVars = { urls: urlDatabase };
   //console.log(urlDatabase[req.params.shortURL]);
-   delete urlDatabase[req.params.shortURL];
-   res.redirect("/urls");
- });
+  delete urlDatabase[req.params.shortURL];
+  res.render("urls_index", templateVars);
+});
 
- app.post("/url/update", (req, res) => {
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
+
+app.post("/url/update", (req, res) => {
   // const templateVars = { urls: urlDatabase };
   console.log(req.body.longURL);
   console.log(req.body.shortURL);
-   urlDatabase[req.body.shortURL] = req.body.longURL;
-   res.redirect("/urls");
- });
+  urlDatabase[req.body.shortURL] = req.body.longURL;
+  const templateVars = {
+    username: req.cookies.username,
+    urls: urlDatabase
+    // ... any other vars
+  };
+  res.render("urls_index", templateVars);
+});
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    username: req.cookies.username,
+    urls: urlDatabase
+    // ... any other vars
+  };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   let key = generateRandomString();
   //console.log(req.body.longURL + key);  // Log the POST request body to the console
-  urlDatabase[key] = req.body; 
-  const templateVars = { shortURL: key, longURL:req.body.longURL};
+  urlDatabase[key] = req.body;
+  const templateVars = { username: req.cookies.username, shortURL: key, longURL:req.body.longURL};
   res.render("urls_show", templateVars);
   //res.send("/urls/:shortURL");
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/hello", (req, res) => {
-  const templateVars = { greeting: 'Hello World!' };
+  const templateVars = { username: req.cookies.username, greeting: 'Hello World!' };
   res.render("hello_world", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies.username,
+    urls: urlDatabase
+    // ... any other vars
+  };
+  res.render("urls_new", templateVars);
 });
 
 
 app.get("/u/:shortURL", (req, res) => {
-   const longURL = urlDatabase[req.params.shortURL]["longURL"];
-   res.redirect(longURL);
+  const longURL = urlDatabase[req.params.shortURL]["longURL"];
+  res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
+  const templateVars = { username: req.cookies.username, shortURL: req.params.shortURL, longURL:urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
-
-
-
-
-
-
-/*
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-*/
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
