@@ -129,7 +129,7 @@ app.post("/logout", (req, res) => {
 // update url
 app.post("/url/update", (req, res) => {
   const yourURLS = urlsForUser(req.session.user_id);
-  if (!yourURLS || !yourURLS[req.params.shortURL]) {
+  if (!yourURLS ) {
     res.status('403').send('403 - You do not have permissions to update this URL');
   }
   urlDatabase[req.body.shortURL] = {longURL:req.body.longURL, userID:req.session.user_id["id"]};
